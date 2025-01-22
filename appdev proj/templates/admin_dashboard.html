@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="mb-4">Metrics Dashboard</h1>
+
+<div class="row">
+    {% for name, data in metrics.items() %}
+    <div class="col-md-4 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">{{ name }}</h5>
+                <h3 class="card-text">{{ data.value | round(2) }}</h3>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row">
+    {% for name, data in metrics.items() %}
+        {% if data.history != [] %}
+            <div class="col-md-12 mb-5">
+                <h3>{{ name }} History</h3>
+                <canvas id="{{ name | replace(' ', '_') }}Chart"></canvas>
+                <script>
+                    const ctx{{ loop.index }} = document.getElementById('{{ name | replace(' ', '_') }}Chart').getContext('2d');
+                    const labels{{ loop.index }} = {{ data.history | map(attribute='date') | list | tojson }};
+                    const values{{ loop.index }} = {{ data.history | map(attribute='value') | list | tojson }};
+                    new Chart(ctx{{ loop.index }}, {
+                        type: 'line',
+                        data: {
+                            labels: labels{{ loop.index }},
+                            datasets: [{
+                                label: '{{ name }} Over Time',
+                                data: values{{ loop.index }},
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 2,
+                                fill: false
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { display: true },
+                                tooltip: { enabled: true }
+                            },
+                            scales: {
+                                x: { title: { display: true, text: 'Date' }},
+                                y: { title: { display: true, text: '{{ name }}' }}
+                            }
+                        }
+                    });
+                </script>
+            </div>
+        {% endif %}
+    {% endfor %}
+</div>
+
+<h2 class="mt-5">Recent Orders</h2>
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>User</th>
+                <th>Total Amount ($)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.order_id }}</td>
+                <td>{{ order.user_name }}</td>
+                <td>{{ order.total_amount | round(2) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<h2 class="mt-5">Recent Feedback</h2>
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Feedback ID</th>
+                <th>User</th>
+                <th>Comment</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for feedback in feedback %}
+            <tr>
+                <td>{{ feedback.feedback_id }}</td>
+                <td>{{ feedback.user_name }}</td>
+                <td>{{ feedback.content }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
